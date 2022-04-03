@@ -27,6 +27,7 @@ public class User {
     private Date createdAt;
     private Boolean isBlocked;
     private Boolean isAdmin;
+    @DBRef
     private List<Post> posts;
     private List<Comment> comments;
 
