@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
@@ -18,7 +19,6 @@ import java.util.List;
 public class User {
     @Id
     private String id;
-    private int age;
     private String first_name;
     private String last_name;
     private String email;
@@ -27,6 +27,7 @@ public class User {
     private Date createdAt;
     private Boolean isBlocked;
     private Boolean isAdmin;
+    @DBRef
     private List<Post> posts;
     private List<Comment> comments;
 
