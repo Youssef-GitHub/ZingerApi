@@ -1,6 +1,5 @@
 package m3i.fsac.ZingerApi.controller;
 
-import m3i.fsac.ZingerApi.model.Comment;
 import m3i.fsac.ZingerApi.model.Report;
 import m3i.fsac.ZingerApi.repository.ReportRepository;
 import org.json.JSONObject;

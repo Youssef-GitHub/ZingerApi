@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -26,7 +25,7 @@ public class Post {
     private Date createdAt;
     private Date updatedAt;
     private Boolean isBlocked;
-    private List<Comment> comments;
-    private List<Report> reports;
-    private Map<String, Object> reactions;
+    private List<String> idComments;
+    private List<String> idReports;
+    private List<String> reactions;
 }
