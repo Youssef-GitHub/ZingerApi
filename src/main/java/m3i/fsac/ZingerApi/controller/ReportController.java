@@ -1,8 +1,9 @@
 package m3i.fsac.ZingerApi.controller;
 
+import m3i.fsac.ZingerApi.model.Post;
 import m3i.fsac.ZingerApi.model.Report;
+import m3i.fsac.ZingerApi.repository.PostRepository;
 import m3i.fsac.ZingerApi.repository.ReportRepository;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,8 @@ import java.util.Optional;
 public class ReportController {
     @Autowired
     private ReportRepository reportRepository;
+    @Autowired
+    private PostRepository postRepository;
 
     @GetMapping("/report/get")
     public ResponseEntity<?> getReports() {
@@ -23,9 +26,7 @@ public class ReportController {
         if (reports.size() > 0) {
             return new ResponseEntity<>(reports, HttpStatus.OK);
         } else {
-            JSONObject jo = new JSONObject();
-            jo.put("not_found", "true");
-            return new ResponseEntity<>(jo.toString(), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-204", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -35,22 +36,21 @@ public class ReportController {
         if (reportOptional.isPresent()) {
             return new ResponseEntity<>(reportOptional, HttpStatus.OK);
         } else {
-            JSONObject jo = new JSONObject();
-            jo.put("not_found", "true");
-            //"Post not found  with id = " + id
-            return new ResponseEntity<>("ZNG-22", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-204", HttpStatus.NOT_FOUND);
         }
     }
 
     @PostMapping("/report/add")
     public ResponseEntity<?> createReport(@RequestBody Report report) {
-        try {
-            report.setReportAt(new Date(System.currentTimeMillis()));
+        report.setReportAt(new Date(System.currentTimeMillis()));
 
-            reportRepository.save(report);
-            return new ResponseEntity<>(report, HttpStatus.OK);
-        } catch(Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        reportRepository.save(report);
+
+        Optional<Report> reportOptional = reportRepository.findById(report.getId());
+        if (reportOptional.isPresent()) {
+            return new ResponseEntity<>("ZNG-11", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("ZNG-21", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -63,28 +63,39 @@ public class ReportController {
             reportToUpdate.setReportAt(report.getReportAt() != null ? report.getReportAt() : reportToUpdate.getReportAt());
 
             reportRepository.save(reportToUpdate);
-            return new ResponseEntity<>(reportToUpdate, HttpStatus.OK);
+            if (Integer.toString(reportOptional.hashCode()).toString().equals(Integer.toString(reportOptional.hashCode()).toString())) {
+                return new ResponseEntity<>("ZNG-12", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("ZNG-22", HttpStatus.OK);
+            }
         } else {
-            JSONObject jo = new JSONObject();
-            jo.put("not_found", "true");
-            //"Post not found with id = " + id
-            return new ResponseEntity<>("ZNG-22", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-204", HttpStatus.NOT_FOUND);
         }
     }
 
     @DeleteMapping("/report/delete/{id}")
     public ResponseEntity<?> deleteReport(@PathVariable String id) {
-        Optional<Report> reportOptional = reportRepository.findById(id);
-        if (reportOptional.isPresent()) {
-            reportRepository.deleteById(id);
-            Optional<Report> deletedReport = reportRepository.findById(id);
-            if (deletedReport.isPresent()) {
-                return new ResponseEntity<>("ZNG-25", HttpStatus.FAILED_DEPENDENCY);
+        try {
+            Optional<Report> reportOptional = reportRepository.findById(id);
+            if (reportOptional.isPresent()) {
+                //delete report from post
+                Optional<Post> postToDelete = postRepository.findByIdReports(id);
+                postToDelete.get().getIdReports().removeIf(ids -> ids.equals(id));
+
+                //delete report
+                reportRepository.deleteById(id);
+
+                Optional<Report> deletedReport = reportRepository.findById(id);
+                if (deletedReport.isPresent()) {
+                    return new ResponseEntity<>("ZNG-23", HttpStatus.FAILED_DEPENDENCY);
+                } else {
+                    return new ResponseEntity<>("ZNG-13", HttpStatus.OK);
+                }
             } else {
-                return new ResponseEntity<>("ZNG-15", HttpStatus.OK);
+                return new ResponseEntity<>("ZNG-204", HttpStatus.NOT_FOUND);
             }
-        } else {
-            return new ResponseEntity<>("ZNG-22", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 }

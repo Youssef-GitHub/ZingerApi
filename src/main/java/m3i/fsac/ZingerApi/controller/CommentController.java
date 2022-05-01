@@ -1,8 +1,11 @@
 package m3i.fsac.ZingerApi.controller;
 
 import m3i.fsac.ZingerApi.model.Comment;
+import m3i.fsac.ZingerApi.model.Post;
+import m3i.fsac.ZingerApi.model.User;
 import m3i.fsac.ZingerApi.repository.CommentRepository;
-import org.json.JSONObject;
+import m3i.fsac.ZingerApi.repository.PostRepository;
+import m3i.fsac.ZingerApi.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +17,10 @@ import java.util.*;
 public class CommentController {
     @Autowired
     private CommentRepository commentRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PostRepository postRepository;
 
     @GetMapping("/comment/get")
     public ResponseEntity<?> getComments() {
@@ -21,9 +28,7 @@ public class CommentController {
         if (comments.size() > 0) {
             return new ResponseEntity<>(comments, HttpStatus.OK);
         } else {
-            JSONObject jo = new JSONObject();
-            jo.put("not_found", "true");
-            return new ResponseEntity<>(jo.toString(), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-203", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -33,10 +38,7 @@ public class CommentController {
         if (commentOptional.isPresent()) {
             return new ResponseEntity<>(commentOptional, HttpStatus.OK);
         } else {
-            JSONObject jo = new JSONObject();
-            jo.put("not_found", "true");
-            //"Post not found  with id = " + id
-            return new ResponseEntity<>("ZNG-22", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-203", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -48,9 +50,9 @@ public class CommentController {
 
         Optional<Comment> commentOptional = commentRepository.findById(comment.getId());
         if (commentOptional.isPresent()) {
-            return new ResponseEntity<>("ZNG-13", HttpStatus.OK);
+            return new ResponseEntity<>("ZNG-11", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("ZNG-23", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-21", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -64,12 +66,13 @@ public class CommentController {
             commentToUpdate.setCreatedAt(comment.getCreatedAt() != null ? comment.getCreatedAt() : commentToUpdate.getCreatedAt());
 
             commentRepository.save(commentToUpdate);
-            return new ResponseEntity<>(commentToUpdate, HttpStatus.OK);
+            if (Integer.toString(commentOptional.hashCode()).toString().equals(Integer.toString(commentOptional.hashCode()).toString())) {
+                return new ResponseEntity<>("ZNG-12", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("ZNG-22", HttpStatus.OK);
+            }
         } else {
-            JSONObject jo = new JSONObject();
-            jo.put("not_found", "true");
-            //"Post not found with id = " + id
-            return new ResponseEntity<>("ZNG-22", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-203", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -77,15 +80,26 @@ public class CommentController {
     public ResponseEntity<?> deleteComment(@PathVariable String id) {
         Optional<Comment> commentOptional = commentRepository.findById(id);
         if (commentOptional.isPresent()) {
+            //delete comment from User
+            Optional<User> userToDelete = userRepository.findByIdComments(id);
+            userToDelete.get().getIdComments().removeIf(ids -> ids.equals(id));
+
+            //delete comment from Post
+            Optional<Post> postToDelete = postRepository.findByIdComments(id);
+            postToDelete.get().getIdComments().removeIf(ids -> ids.equals(id));
+
+
+            //delete comment
             commentRepository.deleteById(id);
+
             Optional<Comment> deletedComment = commentRepository.findById(id);
             if (deletedComment.isPresent()) {
-                return new ResponseEntity<>("ZNG-25", HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>("ZNG-23", HttpStatus.NOT_FOUND);
             } else {
-                return new ResponseEntity<>("ZNG-15", HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>("ZNG-13", HttpStatus.NOT_FOUND);
             }
         } else {
-            return new ResponseEntity<>("ZNG-22", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("ZNG-203", HttpStatus.NOT_FOUND);
         }
     }
 }

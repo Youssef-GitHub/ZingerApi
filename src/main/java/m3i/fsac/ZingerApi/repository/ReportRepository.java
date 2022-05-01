@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ReportRepository extends MongoRepository<Report, String> {
     public List<Report> findByUserId(String id);
+    public List<Report> findByPostId(String id);
 }

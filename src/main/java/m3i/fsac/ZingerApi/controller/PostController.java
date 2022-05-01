@@ -1,11 +1,13 @@
 package m3i.fsac.ZingerApi.controller;
 
+import m3i.fsac.ZingerApi.model.Comment;
 import m3i.fsac.ZingerApi.model.Post;
+import m3i.fsac.ZingerApi.model.Report;
+import m3i.fsac.ZingerApi.model.User;
 import m3i.fsac.ZingerApi.repository.CommentRepository;
 import m3i.fsac.ZingerApi.repository.PostRepository;
 import m3i.fsac.ZingerApi.repository.ReportRepository;
 import m3i.fsac.ZingerApi.repository.UserRepository;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +49,7 @@ public class PostController {
     @PostMapping("/post/add")
     public ResponseEntity<?> createPost(@RequestBody Post post) {
         post.setCreatedAt(new Date(System.currentTimeMillis()));
-        post.setIsBlocked(false);
+        //post.setIsBlocked(false);
         post.setIdComments(new ArrayList<>());
         post.setReactions(new ArrayList<>());
         post.setIdReports(new ArrayList<>());
@@ -72,7 +74,7 @@ public class PostController {
             postToUpdate.setBody(post.getBody() != null ? post.getBody() : postToUpdate.getBody());
             postToUpdate.setUpdatedAt(new Date(System.currentTimeMillis()));
             postToUpdate.setCreatedAt(post.getCreatedAt() != null ? post.getCreatedAt() : postToUpdate.getCreatedAt());
-            postToUpdate.setIsBlocked(post.getIsBlocked() != null ? post.getIsBlocked() : postToUpdate.getIsBlocked());
+            //postToUpdate.setIsBlocked(post.getIsBlocked() != null ? post.getIsBlocked() : postToUpdate.getIsBlocked());
             postToUpdate.setIdComments(post.getIdComments() != null ? post.getIdComments() : postToUpdate.getIdComments());
             postToUpdate.setIdReports(post.getIdReports() != null ? post.getIdReports() : postToUpdate.getIdReports());
             postToUpdate.setReactions(post.getReactions() != null ? post.getReactions() : postToUpdate.getReactions());
@@ -95,32 +97,33 @@ public class PostController {
             Optional<Post> postOptional = postRepository.findById(id);
             if (postOptional.isPresent()) {
                 //delete post from user
-                userRepository.findByIdPosts(id);
+                Optional<User> userTodDelete = userRepository.findByIdPosts(id);
+                userTodDelete.get().getIdPosts().removeIf(ids -> ids.equals(id));
 
                 //delete post from comment
-
-                //delete post report
-
-                //delete post
-
-                //delete comments
-                for (String comment : postOptional.get().getIdComments()) {
-                    commentRepository.deleteById(comment);
+                List<Comment> commentToDelete = commentRepository.findByPostId(id);
+                for (Comment comment : commentToDelete) {
+                    commentRepository.deleteById(comment.getId());
                 }
 
-                //delete reports
-                for (String report : postOptional.get().getIdReports()) {
-                    reportRepository.deleteById(report);
+                //delete post from report
+                List<Report> reportToDelete = reportRepository.findByPostId(id);
+                for (Report report : reportToDelete) {
+                    reportRepository.deleteById(report.getId());
+                }
+
+                //delete post
+                postRepository.deleteById(id);
+
+                Optional<Post> deletedPost = postRepository.findById(id);
+                if (deletedPost.isPresent()) {
+                    return new ResponseEntity<>("ZNG-23", HttpStatus.OK);
+                } else {
+                    return new ResponseEntity<>("ZNG-13", HttpStatus.OK);
                 }
             } else {
                 return new ResponseEntity<>("ZNG-202", HttpStatus.NOT_FOUND);
             }
-
-            //delete post from user collection
-
-            postRepository.deleteById(id);
-            return new ResponseEntity<>("Deleted post with id = " + id, HttpStatus.OK);
-
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }

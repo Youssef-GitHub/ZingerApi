@@ -119,8 +119,8 @@ public class UserController {
                 //delete user
                 userRepository.deleteById(id);
 
-                Optional<User> userOptionalAgain = userRepository.findById(id);
-                if (userOptionalAgain.isPresent()) {
+                Optional<User> deletedUser = userRepository.findById(id);
+                if (deletedUser.isPresent()) {
                     return new ResponseEntity<>("ZNG-23", HttpStatus.OK);
                 } else {
                     return new ResponseEntity<>("ZNG-13", HttpStatus.OK);

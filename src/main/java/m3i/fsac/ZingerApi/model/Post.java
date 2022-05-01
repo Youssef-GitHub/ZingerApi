@@ -24,7 +24,7 @@ public class Post {
     private String url;
     private Date createdAt;
     private Date updatedAt;
-    private Boolean isBlocked;
+    //private Boolean isBlocked;
     private List<String> idComments;
     private List<String> idReports;
     private List<String> reactions;
